@@ -11,7 +11,7 @@ from getpass import getuser
 from socket import gethostname
 from .project_name import PROJECT_NAME
 from .config import Config
-
+from functions import P
 
 class Logs:
     @property
@@ -101,7 +101,9 @@ class Logs:
                 #pass
                 Functions.fechar_excel(file)
             except Exception as error:
-                raise error   
+                raise error  
+        
+        print(P(f"{status}: {str(description)}", color='magenta')) 
 
 if __name__ == "__main__":
     bot = Logs("testes")
