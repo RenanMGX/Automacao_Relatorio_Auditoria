@@ -1,10 +1,11 @@
 from Entities.kpmg import KPMG
 from Entities.dependencies.arguments import Arguments
 from Entities.dependencies.config import Config
-from Entities.dependencies.sharepointfolder import SharepointFolders
+from Entities.dependencies.sharepointfolder import SharepointFolders, getuser
 from Entities.dependencies.logs import Logs, traceback
 import shutil
 import os
+
 
 class Execute:
     @staticmethod
@@ -13,7 +14,7 @@ class Execute:
         
         bot.start_nav()
         
-        path_target:str = SharepointFolders(Config()['path']['sharepoint']).value
+        path_target:str = f'C:\\Users\\{getuser()}\\PATRIMAR ENGENHARIA S A\\RPA - Documentos\\RPA - Dados\\Relatorios Auditoria\\KPMG'
         
         try:
             path = bot.extract_modulo_operacional()
