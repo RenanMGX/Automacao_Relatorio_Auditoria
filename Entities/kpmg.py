@@ -49,15 +49,18 @@ class KPMG:
         for _ in range(60):
             sleep(1)
             lista_arquivos:list = [os.path.join(self.nav.path_download, file) for file in os.listdir(self.nav.path_download)]
-            arquivo:str = max(lista_arquivos, key=os.path.getctime)
-            sleep(1)
-            if '.crdownload' in arquivo:
-                #print(arquivo)
-                del lista_arquivos
-                del arquivo
-                continue
+            if lista_arquivos:
+                arquivo:str = max(lista_arquivos, key=os.path.getctime)
+                sleep(1)
+                if '.crdownload' in arquivo:
+                    #print(arquivo)
+                    del lista_arquivos
+                    del arquivo
+                    continue
+                else:
+                    return arquivo
             else:
-                return arquivo
+                sleep(1)
         raise Exception("não foi possivel identificar ultimo download")
     
     @staticmethod
@@ -119,7 +122,9 @@ class KPMG:
         sleep(1)  
         self.nav.find_element(By.ID, 'btn-generate-report-database').click()
         
+        sleep(5)
         KPMG.verificar_arquivos_download(self.nav.path_download)
+        sleep(1)
         
         return self.ultimo_download()
     
@@ -137,7 +142,9 @@ class KPMG:
         sleep(1)
         self.nav.find_element(By.ID, 'btn-generate-report-riskanalysis').click()
         
+        sleep(5)
         KPMG.verificar_arquivos_download(self.nav.path_download)
+        sleep(1)
         
         return self.ultimo_download()
         
