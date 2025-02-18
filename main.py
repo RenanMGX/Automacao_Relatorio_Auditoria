@@ -20,7 +20,14 @@ class Execute:
         try:
             path = bot.extract_modulo_operacional()
             if os.path.exists(path):
-                shutil.copy2(path, os.path.join(path_target, 'modulo_operacional.csv'))
+                op_target_path = os.path.join(path_target, 'modulo_operacional.csv')
+                os.unlink(op_target_path)
+                
+                shutil.copy2(path, op_target_path)
+                sleep(1)
+                shutil.copy2(path, op_target_path)
+                sleep(1)
+                shutil.copy2(path, op_target_path)
             else:
                 Logs().register(status='Report', description=f"o arquivo do modulo operacional não foi encontrado {path}")
         except Exception as err:
@@ -29,7 +36,14 @@ class Execute:
         try:
             path = bot.extract_modulo_estrategico()
             if os.path.exists(path):
-                shutil.copy2(path, os.path.join(path_target, 'modulo_estrategico.csv'))
+                es_target_path = os.path.join(path_target, 'modulo_estrategico.csv')
+                os.unlink(es_target_path)
+
+                shutil.copy2(path, es_target_path)
+                sleep(1)
+                shutil.copy2(path, es_target_path)
+                sleep(1)
+                shutil.copy2(path, es_target_path)
             else:
                 Logs().register(status='Report', description=f"o arquivo do modulo estrategico não foi encontrado {path}")
         except Exception as err:
