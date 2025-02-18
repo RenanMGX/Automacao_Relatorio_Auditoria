@@ -152,10 +152,10 @@ class KPMG:
         while "Carregando..." in self.nav.find_element(By.ID, 'filter').text:
             sleep(.25)
         
-        sleep(1)  
+        sleep(2)  
         self.nav.find_element(By.ID, 'btn-generate-report-database').click()
         
-        sleep(5)
+        sleep(7)
         KPMG.verificar_arquivos_download(self.nav.path_download)
         sleep(1)
         
@@ -172,10 +172,10 @@ class KPMG:
         sleep(1)
         Select(self.nav.find_element(By.ID, 'input-calendar')).select_by_value('217')
         
-        sleep(1)
+        sleep(2)
         self.nav.find_element(By.ID, 'btn-generate-report-riskanalysis').click()
         
-        sleep(5)
+        sleep(7)
         KPMG.verificar_arquivos_download(self.nav.path_download)
         sleep(1)
         
