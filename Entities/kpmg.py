@@ -4,6 +4,8 @@ from Entities.dependencies.credenciais import Credential
 from Entities.dependencies.config import Config
 from time import sleep
 import os
+import random
+import string
 
 class KPMG:
     @property
@@ -95,10 +97,41 @@ class KPMG:
             except Exception:
                 pass
             
+            sleep(1)
+            try:
+                self.nav.find_element(By.ID, 'ActualPassword', timeout=5).send_keys(self.__crd['password'])
+                
+                new_password = ""
+                for _ in range(60):
+                    new_password:str = KPMG.create_new_password(num=14)
+                    self.nav.find_element(By.ID, 'NewPassword').send_keys(new_password)
+                    
+                    sleep(1)
+                    if "Senha muito forte" in self.nav.find_element(By.ID, 'password-score').text:
+                        break
+                    self.nav.find_element(By.ID, 'NewPassword').clear()
+                    if _ == 59:
+                        raise Exception("não foi possivel criar uma senha forte")
+                    
+                self.nav.find_element(By.ID, 'ConfirmPassword').send_keys(new_password)
+                self.nav.find_element(By.ID, 'alter-password').click()
+                
+                sleep(1)
+                try:
+                    self.nav.find_element(By.ID, 'ActualPassword', timeout=2)
+                    raise Exception("não foi possivel alterar a senha")
+                except exceptions.ElementNotFound:
+                    crd = Credential(Config()['credential']['navegador'])
+                    crd.save(user=self.__crd['user'], password=new_password)
+                
+            except:
+                pass
+            
             print(P("Login Efeturado!", color="green"))
             return
             
         print(P("já está logado!", color='yellow'))
+        #import pdb; pdb.set_trace()
 
     def extract_modulo_operacional(self):
         self.__limpar_pasta_download()
@@ -147,6 +180,11 @@ class KPMG:
         sleep(1)
         
         return self.ultimo_download()
+    
+    @staticmethod
+    def create_new_password(num:int=15) -> str:
+        base_letters = string.ascii_letters + string.digits + string.punctuation
+        return ''.join(random.choice(base_letters) for _ in range(num))
         
 if __name__ == "__main__":
     pass
