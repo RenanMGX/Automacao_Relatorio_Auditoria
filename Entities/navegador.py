@@ -22,7 +22,7 @@ class Navegador(Chrome):
         return os.path.join(os.getcwd(), "Download_Arquivos")
         
         
-    def __init__(self, *, url:str="", speak:bool=False): 
+    def __init__(self, *, url:str="", speak:bool=False, headless:bool=True): 
         self.speak:bool = speak 
         
         if not os.path.exists(self.path_download): 
@@ -31,6 +31,15 @@ class Navegador(Chrome):
         chrome_options: Options = Options()
         chrome_options.add_experimental_option('prefs', prefs)
         chrome_options.add_argument(f"--user-data-dir=C:\\Users\\{getuser()}\\AppData\\Local\\Google\\Chrome")
+        
+        if headless:
+            chrome_options.add_argument("--headless")  # Ativa o modo headless
+            chrome_options.add_argument("--disable-gpu")  # Desativa o uso de GPU (opcional)
+            chrome_options.add_argument("--window-size=1920,1080")  # Define o tamanho da janela (opcional)
+            chrome_options.add_argument("--no-sandbox")  # Necessário em alguns ambientes Linux
+            chrome_options.add_argument("--disable-dev-shm-usage")  # Evita problemas de memória compartilhada         
+        
+        
         
         super().__init__(options=chrome_options)
         if url:
