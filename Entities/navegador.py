@@ -10,7 +10,7 @@ from selenium.webdriver.support.ui import Select
 from getpass import getuser
 from time import sleep
 from functools import wraps
-from Entities.dependencies.functions import P
+from patrimar_dependencies.functions import P
 import os
 import exceptions
 

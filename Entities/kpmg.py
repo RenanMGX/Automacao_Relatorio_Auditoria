@@ -1,11 +1,11 @@
 from navegador import Navegador as Nav, P, By, Keys, Select
 import exceptions
-from Entities.dependencies.credenciais import Credential
-from Entities.dependencies.config import Config
 from time import sleep
 import os
 import random
 import string
+from botcity.maestro import * # type: ignore
+from patrimar_dependencies.credenciais_botcity import CredentialBotCity
 
 class KPMG:
     @property
@@ -15,19 +15,21 @@ class KPMG:
         except AttributeError:
             raise exceptions.NavNotStarted(f"primeiro Inicia o Navegador usando {self.__class__.__name__}.start_nav()")
         
-    def __init__(self, *, url:str="") -> None:
-        self.__crd:dict = Credential(Config()['credential']['navegador']).load()
-        
-        if url:
-            self.__nav = Nav(url=url)
+    def __init__(self, *, user:str, password:str, label:str, url:str, maestro:BotMaestroSDK|None=None, headless:bool=True) -> None:
+        self.__crd:dict = {"user": user, "password": password, "label": label}
+        self.url:str = url
+        self.__maestro:BotMaestroSDK|None = maestro
+        self.start_nav(headless=headless)
+        # if url:
+        #     self.__nav = Nav(url=url)
             
-    def start_nav(self, url:str=""):
+    def start_nav(self, url:str="", headless:bool=True):
         try:
             if self.nav:
                 print(P("O navegador já está aberto", color='yellow'))
                 return
         except:
-            self.__nav = Nav()
+            self.__nav = Nav(headless=headless)
             if url:
                 self.nav.get(url)
     
@@ -84,7 +86,7 @@ class KPMG:
         return False
         
     def __login(self) -> None:
-        self.nav.get(Config()['url']['default'])
+        self.nav.get(self.url)
         if self.nav.find_element(By.ID, 'Username'):
             self.nav.find_element(By.ID, 'Username').send_keys(self.__crd['user'])
             self.nav.find_element(By.ID, 'Password').send_keys(self.__crd['password'])
@@ -99,30 +101,38 @@ class KPMG:
             
             sleep(1)
             try:
-                self.nav.find_element(By.ID, 'ActualPassword', timeout=5).send_keys(self.__crd['password'])
-                
-                new_password = ""
-                for _ in range(60):
-                    new_password:str = KPMG.create_new_password(num=14)
-                    self.nav.find_element(By.ID, 'NewPassword').send_keys(new_password)
+                if not self.__maestro is None:
+                    self.nav.find_element(By.ID, 'ActualPassword', timeout=5).send_keys(self.__crd['password'])
+                    
+                    new_password = ""
+                    for _ in range(60):
+                        new_password:str = KPMG.create_new_password(num=14)
+                        self.nav.find_element(By.ID, 'NewPassword').send_keys(new_password)
+                        
+                        sleep(1)
+                        if "Senha muito forte" in self.nav.find_element(By.ID, 'password-score').text:
+                            break
+                        self.nav.find_element(By.ID, 'NewPassword').clear()
+                        if _ == 59:
+                            raise Exception("não foi possivel criar uma senha forte")
+                        
+                    self.nav.find_element(By.ID, 'ConfirmPassword').send_keys(new_password)
+                    self.nav.find_element(By.ID, 'alter-password').click()
                     
                     sleep(1)
-                    if "Senha muito forte" in self.nav.find_element(By.ID, 'password-score').text:
-                        break
-                    self.nav.find_element(By.ID, 'NewPassword').clear()
-                    if _ == 59:
-                        raise Exception("não foi possivel criar uma senha forte")
+                    try:
+                        self.nav.find_element(By.ID, 'ActualPassword', timeout=2)
+                        raise Exception("não foi possivel alterar a senha")
+                    except exceptions.ElementNotFound:
+                        # crd = Credential(Config()['credential']['navegador'])
+                        # crd.save(user=self.__crd['user'], password=new_password)
+                        self.__maestro.update_credential(label=self.__crd['label'], key="password", new_value=new_password)
+                        self.__crd['password'] = new_password
+                        
+                else:
+                    print("Não foi possivel criar uma nova senha pq o maestro não foi isntanciado")
                     
-                self.nav.find_element(By.ID, 'ConfirmPassword').send_keys(new_password)
-                self.nav.find_element(By.ID, 'alter-password').click()
-                
-                sleep(1)
-                try:
-                    self.nav.find_element(By.ID, 'ActualPassword', timeout=2)
-                    raise Exception("não foi possivel alterar a senha")
-                except exceptions.ElementNotFound:
-                    crd = Credential(Config()['credential']['navegador'])
-                    crd.save(user=self.__crd['user'], password=new_password)
+                    
                 
             except:
                 pass
