@@ -82,7 +82,8 @@ class Execute:
             label=credential_label,
             url=url,
             path_target=path_target,
-            headless=False
+            headless=False,
+            maestro=maestro
         )
         
         p.add_processado()
