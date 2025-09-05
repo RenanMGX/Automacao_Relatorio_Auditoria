@@ -6,6 +6,7 @@ import random
 import string
 from botcity.maestro import * # type: ignore
 from patrimar_dependencies.credenciais_botcity import CredentialBotCity
+from .filles import concatenar_csv_files
 
 class KPMG:
     @property
@@ -56,7 +57,7 @@ class KPMG:
             if lista_arquivos:
                 arquivo:str = max(lista_arquivos, key=os.path.getctime)
                 sleep(1)
-                if '.crdownload' in arquivo:
+                if arquivo.lower().endswith('.crdownload'):
                     #print(arquivo)
                     del lista_arquivos
                     del arquivo
@@ -76,7 +77,7 @@ class KPMG:
             for _ in range(timeout):
                 exist:bool = False
                 for file in os.listdir(path):
-                    if '.crdownload' in file:
+                    if file.lower().endswith('.crdownload'):
                         exist = True
                 if not exist:
                     sleep(3)
@@ -143,9 +144,11 @@ class KPMG:
         print(P("já está logado!", color='yellow'))
         #import pdb; pdb.set_trace()
 
-    def extract_modulo_operacional(self):
+    def extract_modulo_operacional(self, *, path_target:str):
         self.__limpar_pasta_download()
         self.__login()
+        
+        #import pdb;pdb.set_trace()
         
         self.nav.find_element(By.ID, 'grc-system').click()
         self.nav.find_element(By.XPATH, '//*[@id="menu"]/li/a').click()
@@ -155,23 +158,35 @@ class KPMG:
         Select(self.nav.find_element(By.ID, 'input-company')).select_by_value("44")
         sleep(1)
         Select(self.nav.find_element(By.ID, 'input-type')).select_by_value("Sox")
-        sleep(1)
-        Select(self.nav.find_element(By.ID, 'input-calendar')).select_by_value("122")
+        sleep(2)
+        s_options = Select(self.nav.find_element(By.ID, 'input-calendar')).options
+        s_options = [x for x in s_options if not 'Selecione o ciclo' == x.text]
         
-        sleep(1)        
-        while "Carregando..." in self.nav.find_element(By.ID, 'filter').text:
-            sleep(.25)
+        files = []
+        for option in s_options:
+            sleep(1)
+            option.click()
+            
+            sleep(1)        
+            while "Carregando..." in self.nav.find_element(By.ID, 'filter').text:
+                sleep(.25)
+            
+            sleep(2)  
+            self.nav.find_element(By.ID, 'btn-generate-report-database').click()
+            
+            sleep(10)
+            #KPMG.verificar_arquivos_download(self.nav.path_download)
+            files.append(self.ultimo_download())
+            sleep(1)
         
-        sleep(2)  
-        self.nav.find_element(By.ID, 'btn-generate-report-database').click()
-        
-        sleep(7)
-        KPMG.verificar_arquivos_download(self.nav.path_download)
-        sleep(1)
-        
-        return self.ultimo_download()
+        file_path = concatenar_csv_files(
+            list_files=files,
+            new_name="modulo_operacional",
+            target_path=path_target   
+        )
+        return file_path
     
-    def extract_modulo_estrategico(self):
+    def extract_modulo_estrategico(self, *, path_target:str):
         self.__limpar_pasta_download()
         self.__login()
         
@@ -179,18 +194,28 @@ class KPMG:
         self.nav.find_element(By.XPATH, '//*[@id="menu"]/li/a').click()
         self.nav.find_element(By.XPATH, '//*[@id="ReportsDropdown"]/li[2]/a/span').click()
         
-        sleep(1)
-        Select(self.nav.find_element(By.ID, 'input-calendar')).select_by_value('217')
+        s_options = Select(self.nav.find_element(By.ID, 'input-calendar')).options
+        s_options = [x for x in s_options if not 'Selecione o ciclo' == x.text]
         
-        sleep(2)
-        self.nav.find_element(By.ID, 'btn-generate-report-riskanalysis').click()
+        files = []
+        for option in s_options:
+            option.click()
         
-        sleep(7)
-        KPMG.verificar_arquivos_download(self.nav.path_download)
-        sleep(1)
+            sleep(2)
+            self.nav.find_element(By.ID, 'btn-generate-report-riskanalysis').click()
+            
+            sleep(10)
+            #KPMG.verificar_arquivos_download(self.nav.path_download)
+            files.append(self.ultimo_download())
+            sleep(1)
         
-        return self.ultimo_download()
-    
+        file_path = concatenar_csv_files(
+            list_files=files,
+            new_name="modulo_estrategico",
+            target_path=path_target
+        )
+        return file_path
+
     @staticmethod
     def create_new_password(num:int=15) -> str:
         base_letters = string.ascii_letters + string.digits + string.punctuation
