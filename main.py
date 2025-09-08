@@ -1,10 +1,12 @@
 from Entities.kpmg import KPMG
+from selenium.common.exceptions import SessionNotCreatedException
 from patrimar_dependencies.sharepointfolder import SharePointFolders
 import shutil
 import os
 from time import sleep
 from botcity.maestro import * #type: ignore
 import traceback
+from patrimar_dependencies.functions import P
 
 class ExecuteAPP:
     @staticmethod
@@ -15,79 +17,66 @@ class ExecuteAPP:
               label:str,
               url:str,
               path_target:str,
-              headless:bool=True
+              headless:bool=True,
+              tentativas:int=3
               ):
+        for _ in range(tentativas):
+            try:
+                bot = KPMG(
+                    user=user,
+                    password=password,
+                    url=url,
+                    label=label,
+                    maestro=maestro,
+                    headless=headless
+                )
+            except SessionNotCreatedException:
+                pass
+            except Exception as error:
+                print(traceback.format_exc())
+                import pdb; pdb.set_trace()
+                print(P(f"tentativa {_+1} de {tentativas} ao abrir o navegador falhou: {error}", color='red'))
+                if _ >= (tentativas - 1):
+                    raise error
+                sleep(5)
+                
         
-        bot = KPMG(
-            user=user,
-            password=password,
-            url=url,
-            label=label,
-            maestro=maestro,
-            headless=headless
-        )
         
-        #bot.start_nav(headless=headless)
-        
-        #path_target:str = f'C:\\Users\\{getuser()}\\PATRIMAR ENGENHARIA S A\\RPA - Documentos\\RPA - Dados\\Relatorios Auditoria\\KPMG'
+
         path_target = SharePointFolders(path_target).value
         
-        try:
-            path = bot.extract_modulo_operacional(path_target=path_target)
-            # if os.path.exists(path):
-            #     op_target_path = os.path.join(path_target, 'modulo_operacional.csv')
-            #     os.unlink(op_target_path)
-                
-            #     shutil.copy2(path, op_target_path)
-            #     sleep(1)
-            #     shutil.copy2(path, op_target_path)
-            #     sleep(1)
-            #     shutil.copy2(path, op_target_path)
-            # else:
-            #     if not maestro is None:
-            #         maestro.new_log_entry(
-            #             activity_label="alimentar_relatorio_auditoria",
-            #             values={
-            #                 "texto": f"o arquivo do modulo operacional não foi encontrado {path}"
-            #             }
-            #         )                
-                
-        except Exception as error:
-            print(traceback.format_exc())
-            if not maestro is None:
-                maestro.error(task_id=int(maestro.get_execution().task_id), exception=error)              
+        for _ in range(tentativas):
+            try:
+                bot.extract_modulo_operacional(path_target=path_target) #type: ignore
+            except Exception as error:
+                print(P(f"Erro na tentativa {_+1} de {tentativas} do modulo operacional: {error}", color='red'))
+                if _ >= (tentativas - 1):
+                    print(traceback.format_exc())
+                    if not maestro is None:
+                        maestro.error(task_id=int(maestro.get_execution().task_id), exception=error)    
+                    raise error
+                else:
+                    sleep(5)
+         
+        for _ in range(tentativas):
+            try:
+                bot.extract_modulo_estrategico(path_target=path_target) #type: ignore
+            except Exception as error:
+                print(P(f"Erro na tentativa {_+1} de {tentativas} do modulo estrategico: {error}", color='red'))
+                if _ >= (tentativas - 1):
+                    print(traceback.format_exc())
+                    if not maestro is None:
+                        maestro.error(task_id=int(maestro.get_execution().task_id), exception=error)              
+                    raise error
+                else:
+                    sleep(5)
         
-        try:
-            path = bot.extract_modulo_estrategico(path_target=path_target)
-            # if os.path.exists(path):
-            #     es_target_path = os.path.join(path_target, 'modulo_estrategico.csv')
-            #     os.unlink(es_target_path)
-
-            #     shutil.copy2(path, es_target_path)
-            #     sleep(1)
-            #     shutil.copy2(path, es_target_path)
-            #     sleep(1)
-            #     shutil.copy2(path, es_target_path)
-            # else:
-            #     if not maestro is None:
-            #         maestro.new_log_entry(
-            #             activity_label="alimentar_relatorio_auditoria",
-            #             values={
-            #                 "texto": f"o arquivo do modulo estrategico não foi encontrado {path}"
-            #             }
-            #         )                
-                
-        except Exception as error:
-            print(traceback.format_exc())
-            if not maestro is None:
-                maestro.error(task_id=int(maestro.get_execution().task_id), exception=error)              
-        
-        bot.close_nav()
+        bot.close_nav() #type: ignore
     
 if __name__ == "__main__":
     from patrimar_dependencies.credenciais_botcity import CredentialBotCity
     
-    crd = CredentialBotCity(login="grupopatrimar", key="GRU_HTBO7WB9GS25VFRFW6JN").get_credential("KPMG")
+    crd = CredentialBotCity(login="#", key="#").get_credential("KPMG")
     
     
     ExecuteAPP.start(
