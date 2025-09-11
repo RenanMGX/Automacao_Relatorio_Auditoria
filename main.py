@@ -76,16 +76,17 @@ class ExecuteAPP:
 if __name__ == "__main__":
     from patrimar_dependencies.credenciais_botcity import CredentialBotCity
     
-    crd = CredentialBotCity(login="#", key="#").get_credential("KPMG")
+    crd = CredentialBotCity(login="", key="").get_credential("KPMG")
     
-    
-    ExecuteAPP.start(
-        user=crd['user'],
-        password=crd['password'],
-        label="KPMG",
-        url="https://krast.kpmg.com.br",
-        path_target=r"RPA - Dados\Relatorios Auditoria\KPMG",
-        headless=False
-    )
+
+
+    # ExecuteAPP.start(
+    #     user=crd['user'],
+    #     password=crd['password'],
+    #     label="KPMG",
+    #     url="https://krast.kpmg.com.br",
+    #     path_target=r"RPA - Dados\Relatorios Auditoria\KPMG",
+    #     headless=False
+    # )
     
     

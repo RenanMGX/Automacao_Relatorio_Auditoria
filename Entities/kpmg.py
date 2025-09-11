@@ -9,6 +9,13 @@ from patrimar_dependencies.credenciais_botcity import CredentialBotCity
 from .filles import concatenar_csv_files
 
 class KPMG:
+    def __del__(self):
+        try:
+            self.nav.close()
+        except:
+            pass
+    
+    
     @property
     def nav(self) -> Nav:
         try:
